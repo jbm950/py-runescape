@@ -32,6 +32,33 @@ class GetPlayer(ModalScreen):
         self.app.pop_screen()
 
 
+class PlayerPlot(PlotextPlot):
+    def player_levels(self, skills):
+        plt = self.plt
+        plt.clear_data()
+        plt.clear_figure()
+        plt.bar(skills.names[::-1],
+                skills.levels[::-1],
+                orientation='horizontal',
+                width=0.01)
+        plt.xlim(0, 99)
+        plt.title('Player Levels')
+
+        self.refresh()
+
+    def player_xp(self, skills):
+        plt = self.plt
+        plt.clear_data()
+        plt.clear_figure()
+        plt.bar(skills.names[::-1],
+                skills.xp[::-1],
+                orientation='horizontal',
+                width=0.01)
+        plt.title('Player XP')
+
+        self.refresh()
+
+
 class RunescapeApp(App):
     CSS = """
     PlotextPlot {
@@ -60,21 +87,12 @@ class RunescapeApp(App):
     }
     """
     def compose(self):
-        yield PlotextPlot()
+        yield PlayerPlot()
 
     def on_mount(self):
         self.push_screen(GetPlayer('Salvsis2'))
 
     def on_get_player_loaded(self, message):
         skills = message.player.skills
-        plot_widget = self.query_one(PlotextPlot)
-        plt = plot_widget.plt
-        plt.clear_data()
-        plt.clear_figure()
-        plt.bar(skills.names[::-1],
-                skills.levels[::-1],
-                orientation='horizontal',
-                width=0.01)
-        plt.xlim(0, 99)
-        plt.title('Player Levels')
-        plot_widget.refresh()
+        player_plot = self.query_one(PlayerPlot)
+        player_plot.player_levels(skills)
