@@ -3,10 +3,12 @@ from textual.app import App
 from textual.containers import Horizontal, Vertical
 from textual.message import Message
 from textual.screen import ModalScreen
-from textual.widgets import Button, Label, LoadingIndicator
+from textual.widgets import Button, Input, Label, LoadingIndicator
 from textual_plotext import PlotextPlot
 
 from api import get_player
+
+INITIAL_PLAYER = 'Salvsis2'
 
 
 class GetPlayer(ModalScreen):
@@ -66,6 +68,10 @@ class RunescapeApp(App):
         height: 3;
     }
 
+    PlayerPlot {
+        padding: 1 0 0 0;
+    }
+
     GetPlayer {
         align: center middle;
     }
@@ -75,6 +81,10 @@ class RunescapeApp(App):
         width: 40;
         border: thick $background 80%;
         background: $surface;
+    }
+
+    Input {
+        width: 50%;
     }
 
     #loading-label {
@@ -87,25 +97,39 @@ class RunescapeApp(App):
         padding: 0 0 3 0;
     }
     """
+
+    BINDINGS = [('l', 'show_level', 'Show Level'),
+                ('x', 'show_xp', 'Show XP')]
+
     def compose(self):
         with Horizontal():
+            yield Input(INITIAL_PLAYER)
             yield Button('Levels', id='show-levels')
             yield Button('Xp', id='show-xp')
 
         yield PlayerPlot()
 
     def on_mount(self):
-        self.push_screen(GetPlayer('Salvsis2'))
+        self.push_screen(GetPlayer(INITIAL_PLAYER))
+
+    def on_input_submitted(self, event):
+        self.push_screen(GetPlayer(event.value))
 
     @on(Button.Pressed, '#show-levels')
     def switch_plot_to_levels(self):
         player_plot = self.query_one(PlayerPlot)
         player_plot.player_levels(self.player.skills)
 
+    def action_show_level(self):
+        self.switch_plot_to_levels()
+
     @on(Button.Pressed, '#show-xp')
     def switch_plot_to_xp(self):
         player_plot = self.query_one(PlayerPlot)
         player_plot.player_xp(self.player.skills)
+
+    def action_show_xp(self):
+        self.switch_plot_to_xp()
 
     def on_get_player_loaded(self, message):
         self.player = message.player
