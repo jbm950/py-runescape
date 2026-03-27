@@ -1,8 +1,9 @@
+from textual import on
 from textual.app import App
-from textual.containers import Vertical
+from textual.containers import Horizontal, Vertical
 from textual.message import Message
 from textual.screen import ModalScreen
-from textual.widgets import Label, LoadingIndicator
+from textual.widgets import Button, Label, LoadingIndicator
 from textual_plotext import PlotextPlot
 
 from api import get_player
@@ -61,8 +62,8 @@ class PlayerPlot(PlotextPlot):
 
 class RunescapeApp(App):
     CSS = """
-    PlotextPlot {
-        padding: 4 0 0 0
+    Horizontal {
+        height: 3;
     }
 
     GetPlayer {
@@ -87,12 +88,27 @@ class RunescapeApp(App):
     }
     """
     def compose(self):
+        with Horizontal():
+            yield Button('Levels', id='show-levels')
+            yield Button('Xp', id='show-xp')
+
         yield PlayerPlot()
 
     def on_mount(self):
         self.push_screen(GetPlayer('Salvsis2'))
 
+    @on(Button.Pressed, '#show-levels')
+    def switch_plot_to_levels(self):
+        player_plot = self.query_one(PlayerPlot)
+        player_plot.player_levels(self.player.skills)
+
+    @on(Button.Pressed, '#show-xp')
+    def switch_plot_to_xp(self):
+        player_plot = self.query_one(PlayerPlot)
+        player_plot.player_xp(self.player.skills)
+
     def on_get_player_loaded(self, message):
-        skills = message.player.skills
+        self.player = message.player
+        skills = self.player.skills
         player_plot = self.query_one(PlayerPlot)
         player_plot.player_levels(skills)
